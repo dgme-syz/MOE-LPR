@@ -2,11 +2,10 @@ from dataclasses import dataclass, field
 from typing import List, Optional, Union
 
 from peft.config import PeftConfig
-from peft.utils import PeftType
 
 
 @dataclass
-class MoEConfig(PeftConfig):
+class MoeConfig(PeftConfig):
     init_moe_weights: bool = field(
         default=True,
         metadata={

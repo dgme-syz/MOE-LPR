@@ -1,6 +1,6 @@
 from peft.tuners.tuners_utils import BaseTuner, BaseTunerLayer
-from .config import MoEConfig
-from .layer import MoE, MoELayer
+from .config import MoeConfig
+from .layer import MoeLayer, MLP
 
 import warnings
 from dataclasses import asdict
@@ -8,15 +8,16 @@ from enum import Enum
 
 from peft.utils import ModulesToSaveWrapper
 
-class MoEModel(BaseTuner):
-    prefix: str = "moe_"  # prefix for all adapter modules
+class MoeModel(BaseTuner):
+    prefix: str = "moe_"
+
     def __init__(self, model, config, adapter_name) -> None:
-        moe_layers = config.layers_to_transform if isinstance(config, MoEConfig) else config[adapter_name].layers_to_transform
+        moe_layers = config.layers_to_transform if isinstance(config, MoeConfig) else config[adapter_name].layers_to_transform
         self.moe_layers = moe_layers.copy()
         #要进入tuner去替换
         super().__init__(model, config, adapter_name)
 
-    def _check_new_adapter_config(self, config: MoEConfig) -> None:
+    def _check_new_adapter_config(self, config: MoeConfig) -> None:
         """
         A helper method to check the config when a new adapter is being added.
 
@@ -32,7 +33,7 @@ class MoEModel(BaseTuner):
             )
     #检查哪些模块是我们需要替换的
     def _check_target_module_exists(self, moe_config, key):
-        if "mlp" in key.split("."): # qwen ffn 
+        if "mlp" in key.split("."):
             layerid = int(key.split(".")[2])
             if layerid in self.moe_layers:
                 self.moe_layers.pop(self.moe_layers.index(layerid))
@@ -70,17 +71,17 @@ class MoEModel(BaseTuner):
         # _mark_only_adapters_as_trainable
 
         # child layer wraps the original module, unpack it
-        if hasattr(child, "ffn_layer"):
-            child = child.ffn_layer
+        if hasattr(child, "base_layer"):
+            child = child.base_layer
 
-        if not hasattr(new_module, "ffn_layer"):
+        if not hasattr(new_module, "base_layer"):
             new_module.weight = child.weight
             if hasattr(child, "bias"):
                 new_module.bias = child.bias
 
         if getattr(child, "state", None) is not None:
-            if hasattr(new_module, "ffn_layer"):
-                new_module.ffn_layer.state = child.state
+            if hasattr(new_module, "base_layer"):
+                new_module.base_layer.state = child.state
             else:
                 new_module.state = child.state
             new_module.to(child.weight.device)
@@ -103,7 +104,7 @@ class MoEModel(BaseTuner):
 
     @staticmethod
     def _create_new_module(moe_config, adapter_name, target, **kwargs):
-        new_module = MoE(target, adapter_name, 
+        new_module = MLP(target, adapter_name, 
                          num_experts=moe_config.num_experts, 
                          init_moe_weights=moe_config.init_moe_weights,
                          topk=moe_config.topk,
@@ -149,7 +150,7 @@ class MoEModel(BaseTuner):
 
     def set_adapter(self, adapter_name):
         for module in self.model.modules():
-            if isinstance(module, MoELayer):
+            if isinstance(module, MoeLayer):
                 if module.merged:
                     warnings.warn("Adapter cannot be set when the model is merged. Unmerging the model first.")
                     module.unmerge()
