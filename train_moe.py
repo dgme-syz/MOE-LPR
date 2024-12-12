@@ -20,7 +20,7 @@ def get_args():
     parser.add_argument("--model_name", type=str, default="Qwen/Qwen1.5-0.5B")
     parser.add_argument("--topk", type=int, default=2)
     parser.add_argument("--moe_num_experts", type=int, default=2)
-    parser.add_argument("--aux_loss_coef", type=float, default=0.01)
+    parser.add_argument("--aux_loss_coef", type=float, default=None)
     parser.add_argument("--lpr_loss_coef", type=float, default=None)
     parser.add_argument("--do_train", type=bool, default=True)
     parser.add_argument("--do_eval", type=bool, default=False)
