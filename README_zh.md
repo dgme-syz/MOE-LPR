@@ -16,7 +16,6 @@ python -m train_moe \
     --topk 2 \
     --moe_num_experts 4 \
     --aux_loss_coef 0.01 \
-    --lpr_loss_coef None \
     --dataset path_to_your_dataset \
     --val_size 0.01 \
     --cutoff_len 1024 \
@@ -28,7 +27,7 @@ python -m train_moe \
     --learning_rate 5e-5 \
     --num_train_epochs 1 \
     --bf16 False \
-    --train_only_router False
+    --train_only_router 0
 ```
 
 **阶段2 (stage2)**
@@ -38,7 +37,6 @@ python -m train_moe \
 ```bash
 python -m train_moe \
     --model_name Qwen/Qwen1.5-0.5B \
-    --aux_loss_coef None \
     --lpr_loss_coef 0.1 \
     --dataset path_to_your_dataset \
     --val_size 0.01 \
@@ -51,7 +49,7 @@ python -m train_moe \
     --learning_rate 5e-5 \
     --num_train_epochs 1 \
     --bf16 False \
-    --train_only_router True \
+    --train_only_router 1 \
     --adapter_name your_peft_adapter_path \
     --max_samples 50000 
 ```

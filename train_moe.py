@@ -40,7 +40,7 @@ def get_args():
     
     # Extra Setting For Lpr
     parser.add_argument("--adapter_name", type=str, default="./output/checkpoint-1")
-    parser.add_argument("--train_only_router", type=bool, default=False)
+    parser.add_argument("--train_only_router", type=int, default=0)
     parser.add_argument("--max_samples", type=int, default=50000)
     return parser.parse_args()
 
@@ -78,11 +78,11 @@ def run(args):
         )
     moe_model = get_peft_model(model, moe_config, "default")
     
+    tokenizer = AutoTokenizer.from_pretrained(args.model_name)
+    data = load_dataset('json', data_files=args.dataset, split='train')
     if args.train_only_router:
         lpr_prepare(moe_model, args, data)
     
-    tokenizer = AutoTokenizer.from_pretrained(args.model_name)
-    data = load_dataset('json', data_files=args.dataset, split='train')
     data = data.train_test_split(test_size=args.val_size)
     # print(data)
     
