@@ -16,7 +16,6 @@ python -m train_moe \
     --topk 2 \
     --moe_num_experts 4 \
     --aux_loss_coef 0.01 \
-    --lpr_loss_coef None \
     --dataset path_to_your_dataset \
     --val_size 0.01 \
     --cutoff_len 1024 \
@@ -38,7 +37,6 @@ At this stage, only the router needs to be trained.
 ```
 python -m train_moe \
     --model_name Qwen/Qwen1.5-0.5B \
-    --aux_loss_coef None \
     --lpr_loss_coef 0.1 \
     --dataset path_to_your_dataset \
     --val_size 0.01 \
