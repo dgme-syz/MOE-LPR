@@ -76,8 +76,10 @@ class MLP(nn.Module, MoeLayer):
         self.update_layer(base_layer, adapter_name, num_experts, init_moe_weights)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        previous_dtype = x.dtype
         router = self.moe_router_embedding[self.active_adapter[0]]  # b x s x e
+        previous_dtype = x.dtype
+        if x.dtype != router.weight.dtype:
+            self.to(x.device, dtype=x.dtype)
         result, router_logits = self.topk_route(x, router, self.active_adapter[0]) 
         result = result.to(previous_dtype)
         return result, router_logits
@@ -93,7 +95,7 @@ class MLP(nn.Module, MoeLayer):
         # hidden_states: (batch * sequence_length, hidden_dim)
         router_logits = router(hidden_states)
 
-        routing_weights = F.softmax(router_logits, dim=1, dtype=torch.float)
+        routing_weights = F.softmax(router_logits, dim=1)
         routing_weights, selected_experts = torch.topk(routing_weights, self.topk, dim=-1) # dim: (batch * sequence_length, topk)
         if self.topk != 1:
             routing_weights /= routing_weights.sum(dim=-1, keepdim=True)
@@ -120,6 +122,7 @@ class MLP(nn.Module, MoeLayer):
             # the current expert. We need to make sure to multiply the output hidden
             # states by `routing_weights` on the corresponding tokens (top-1 and top-2)
             current_state = hidden_states[None, top_x].reshape(-1, hidden_dim)
+
             current_hidden_states = expert_layer(current_state) * routing_weights[top_x, idx, None]
 
             # However `index_add_` only support torch tensors for indexing so we'll use

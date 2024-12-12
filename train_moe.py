@@ -51,8 +51,6 @@ def lpr_prepare(model, args, data):
             - Freeze the model except the router
             - limit the data size
     '''
-    if args.adapter_name is not None:
-        model.load_adapter(args.adapter_name, adapter_name="default")
     logger.info("Freezing the model except the router")
     for name, param in model.named_parameters():
         if "router" not in name:
@@ -67,7 +65,7 @@ def lpr_prepare(model, args, data):
 def run(args):
     model = Qwen2ForCausalLM.from_pretrained(args.model_name)
     if args.train_only_router:
-        moe_config = MoeConfig.from_pretrained(args.adapter)
+        moe_config = MoeConfig.from_pretrained(args.adapter_name)
     else:
         moe_config = MoeConfig(
             num_experts=args.moe_num_experts,

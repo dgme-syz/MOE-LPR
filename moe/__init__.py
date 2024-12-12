@@ -39,6 +39,7 @@ save = support_moe_save(get_peft_model_state_dict)
 load = support_moe_load(set_peft_model_state_dict)
 sys.modules["peft.peft_model"].get_peft_model_state_dict = save
 sys.modules["peft.utils"].set_peft_model_state_dict = load
+sys.modules["peft.peft_model"].set_peft_model_state_dict = load
 
 from peft.mapping import PEFT_TYPE_TO_CONFIG_MAPPING, PEFT_TYPE_TO_TUNER_MAPPING
 from peft.peft_model import PEFT_TYPE_TO_MODEL_MAPPING
